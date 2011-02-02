@@ -6,13 +6,13 @@ import scala.swing.event.MouseClicked
 
 import java.awt.{Color,Rectangle,Point,Dimension,Canvas,Graphics2D}
 
-import figures.model.MutableDrawing
+import figures.model.{Figure,MutableDrawing}
 
 class FigureFrame extends MainFrame {
 
   title = "EScala Figures"
 
-  lazy val canvas = new Panel with ComponentEvents {
+  lazy val canvas = new Panel with FigureEventsManager {
     // the model
     val drawing = new MutableDrawing
 
@@ -32,15 +32,6 @@ class FigureFrame extends MainFrame {
       }
     }
 
-    mouseClicked += selectFigure _
-
-    /** Select the figures at the given coordinate if any */
-    def selectFigure(point: Point) {
-      drawing.figureAt(point) match {
-        case Some(figure) => println(figure)
-        case _ => // do nothing
-      }
-    }
 
   }
 
