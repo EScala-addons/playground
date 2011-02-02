@@ -1,0 +1,6 @@
+build/
+bin/
+.scala_dependencies
+tags
+.project
+.classpath
