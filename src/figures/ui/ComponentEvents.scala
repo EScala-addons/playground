@@ -13,6 +13,8 @@ trait ComponentEvents extends Component {
   imperative evt rightMouseClicked[Point]
   imperative evt mouseMoved[Point]
   imperative evt mousePressed[Point]
+  imperative evt leftMousePressed[Point]
+  imperative evt rightMousePressed[Point]
   imperative evt mouseReleased[Point]
   imperative evt mouseDragged[Point]
 
@@ -23,7 +25,12 @@ trait ComponentEvents extends Component {
         leftMouseClicked(point)
       else if(mods == Key.Modifier.Meta)
         rightMouseClicked(point)
-    case MousePressed(_, point, _, _, _) => mousePressed(point)
+    case MousePressed(_, point, mods, _, _) => 
+      mousePressed(point)
+      if(mods == 1024)
+        leftMousePressed(point)
+      else if(mods == 4096)
+        rightMousePressed(point)
     case MouseReleased(_, point, _, _, _) => mouseReleased(point)
   }
 

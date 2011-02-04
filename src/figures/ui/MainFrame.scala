@@ -20,12 +20,25 @@ class FigureFrame extends MainFrame {
     preferredSize = new Dimension(1024, 768)
 
     def drawingInvalidated(rect: Rectangle) {
-      repaint(rect)
+//      repaint(rect)
+      repaint()
     }
 
     drawing.invalidated += drawingInvalidated _
 
     override def paint(g: Graphics2D) {
+      // first clear areas
+      /*toClear.foreach { r => 
+        g.setColor(background)
+        g.fillRect(r.x, r.y, r.width, r.height)
+        g.drawRect(r.x, r.y, r.width, r.height)
+      }
+      toClear.clear
+      revalidate()*/
+      println("bounds: " + bounds)
+      g.setColor(background)
+      g.fillRect(0, 0, bounds.width, bounds.height)
+//      g.drawRect(0, 0, bounds.width, bounds.height)
       // draw all the figures
       drawing.figures.foreach { f =>
         f.render(g)
