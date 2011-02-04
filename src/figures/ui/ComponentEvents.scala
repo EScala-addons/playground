@@ -16,6 +16,8 @@ trait ComponentEvents extends Component {
   imperative evt leftMousePressed[Point]
   imperative evt rightMousePressed[Point]
   imperative evt mouseReleased[Point]
+  imperative evt leftMouseReleased[Point]
+  imperative evt rightMouseReleased[Point]
   imperative evt mouseDragged[Point]
 
   mouse.clicks.reactions += {
@@ -31,7 +33,12 @@ trait ComponentEvents extends Component {
         leftMousePressed(point)
       else if(mods == 4096)
         rightMousePressed(point)
-    case MouseReleased(_, point, _, _, _) => mouseReleased(point)
+    case MouseReleased(_, point, mods, _, _) => 
+      mouseReleased(point)
+      if(mods == 0)
+        leftMouseReleased(point)
+      else if(mods == 256)
+        rightMouseReleased(point)
   }
 
   mouse.moves.reactions += {

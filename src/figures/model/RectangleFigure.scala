@@ -21,7 +21,6 @@ class RectangleFigure (var rect: Rectangle) extends Figure {
     val (x, y, width, height) = (rect.x, rect.y, rect.getSize.getWidth.toInt, rect.getSize.getHeight.toInt)
     g.setColor(new Color(color))
     g.fillRect(x, y, width, height)
-    g.drawRect(x, y, width, height)
   }
 
   def contains(p: Point) = getBounds.contains(p)
