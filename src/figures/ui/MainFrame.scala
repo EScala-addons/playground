@@ -4,7 +4,7 @@ import scala.events._
 import scala.swing.{MainFrame,BorderPanel,FlowPanel,Panel}
 import scala.swing.event.MouseClicked
 
-import java.awt.{Color,Rectangle,Point,Dimension,Canvas,Graphics2D}
+import java.awt.{Color,Rectangle,Point,Dimension,Graphics2D}
 
 import figures.model.{Figure,MutableDrawing}
 
@@ -12,7 +12,7 @@ class FigureFrame extends MainFrame {
 
   title = "EScala Figures"
 
-  lazy val canvas = new Panel with FigureEventsManager {
+  lazy val canvas = new Panel with Canvas with FigureEventsManager {
     // the model
     val drawing = new MutableDrawing
 
@@ -23,7 +23,9 @@ class FigureFrame extends MainFrame {
       repaint(toClear.foldLeft(rect)(_.union(_)))
     }
 
-    drawing.invalidated += drawingInvalidated _
+    evt invalidated = drawing.invalidated || (figureSelected || figureUnselected).map((f: Figure) => f.getBounds)
+
+    invalidated += drawingInvalidated _
 
     override def paint(g: Graphics2D) {
       // first clear areas
@@ -37,6 +39,7 @@ class FigureFrame extends MainFrame {
       drawing.figures.foreach { f =>
         f.render(g)
       }
+      super.paint(g)
     }
 
 
