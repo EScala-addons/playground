@@ -23,7 +23,7 @@ class FigureFrame extends MainFrame {
       repaint(toClear.foldLeft(rect)(_.union(_)))
     }
 
-    evt invalidated = drawing.invalidated || (figureSelected || figureUnselected).map((f: Figure) => f.getBounds)
+    evt invalidated = drawing.invalidated || (figureSelected || figureUnselected || figureDropped).map((f: Figure) => f.getBounds)
 
     invalidated += drawingInvalidated _
 

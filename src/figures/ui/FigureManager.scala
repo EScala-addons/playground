@@ -3,7 +3,7 @@ package figures.ui
 import figures.model.{Figure,MutableDrawing}
 
 import scala.collection.mutable.ListBuffer
-import scala.events.Event
+import scala.events._
 import scala.swing.{Action,Menu,MenuItem}
 
 import java.awt.{Point,Rectangle,Color,Graphics2D}
@@ -23,15 +23,13 @@ trait FigureEventsManager extends ComponentEvents with Canvas {
   evt figureSelected[Figure] = some(leftMouseClicked.map((p: Point) => drawing.figureAt(p)))
   evt rightSelected[Figure,Point] = some(rightMouseClicked.map((p: Point) => drawing.figureAt(p))) and rightMouseClicked
 
-
   evt figureUnselected[Figure] = (none(leftMouseClicked.map((p: Point) => drawing.figureAt(p)) && (_ => selectedFigure != null)) ||
-    (figureSelected && (f => selectedFigure != null && f != selectedFigure))).map((_: Any) => selectedFigure)
+    (figureDragStarted && (p => selectedFigure != null && p._1 != selectedFigure))).map((_: Any) => selectedFigure)
 
   evt figureDragStarted[Figure,Point] = some(leftMousePressed.map((p: Point) => drawing.figureAt(p))) and leftMousePressed
 
   evt figureDragged[Point] = mouseDragged && (() => selectedFigure != null)
-  evt figureDropped[Unit] = leftMouseReleased && (() => selectedFigure != null)
-
+  evt figureDropped[Figure] = (leftMouseReleased && (() => oldPoint != null)).map((_: Point) => selectedFigure)
 
   figureDragStarted += dragStart _
   figureDragged += dragging _
@@ -58,7 +56,10 @@ trait FigureEventsManager extends ComponentEvents with Canvas {
     oldPoint = p
   }
 
-  def dropping() {
+  def dropping(f: Figure) {
+    currentHandles.foreach { h =>
+      toClear += h
+    }
     selectedFigure = null
     oldPoint = null
   }
@@ -71,19 +72,18 @@ trait FigureEventsManager extends ComponentEvents with Canvas {
   }
 
   def unselect(f: Figure) {
-    println("plop")
-    currentHandles.foreach { h =>
+    handlesFor(f).foreach { h =>
       toClear += h
     }
-    selectedFigure = null
-    oldPoint = null
+//    selectedFigure = null
+//    oldPoint = null
   }
 
   case class Handle(cx: Int, cy: Int) extends Rectangle(cx - 5, cy - 5, 10, 10)
 
-  def currentHandles = {
-    if(selectedFigure != null) {
-      val bounds = selectedFigure.getBounds
+  private def handlesFor(f: Figure) = {
+    if(f != null) {
+      val bounds = f.getBounds
       val h1 = Handle(bounds.x, bounds.y)
       val h2 = Handle(bounds.x + bounds.width, bounds.y)
       val h3 = Handle(bounds.x, bounds.y + bounds.height)
@@ -92,6 +92,8 @@ trait FigureEventsManager extends ComponentEvents with Canvas {
     } else
       Nil
   }
+
+  def currentHandles = handlesFor(selectedFigure)
 
   lazy val popup: JPopupMenu = new JPopupMenu {
     add(
@@ -117,11 +119,12 @@ trait FigureEventsManager extends ComponentEvents with Canvas {
     // draw the handles
     if(selectedFigure != null) {
       val bounds = selectedFigure.getBounds
-      g.setColor(Color.BLUE)
-      g.fill(Handle(bounds.x, bounds.y))
-      g.fill(Handle(bounds.x + bounds.width, bounds.y))
-      g.fill(Handle(bounds.x, bounds.y + bounds.height))
-      g.fill(Handle(bounds.x + bounds.width, bounds.y + bounds.height))
+      currentHandles.foreach { h =>
+        g.setColor(Color.LIGHT_GRAY)
+        g.fill(h)
+//        g.setColor(Color.BLACK)
+//        g.draw(h)
+      }
     }
   }
 
