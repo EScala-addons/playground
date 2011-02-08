@@ -18,7 +18,7 @@ class RectangleFigure (var rect: Rectangle) extends Figure {
     rect = bounds
 
   def render(g: Graphics) {
-    val (x, y, width, height) = (rect.x, rect.y, rect.getSize.getWidth.toInt, rect.getSize.getHeight.toInt)
+    val (x, y, width, height) = (rect.x, rect.y, rect.width, rect.height)
     g.setColor(new Color(color))
     g.fillRect(x, y, width, height)
   }

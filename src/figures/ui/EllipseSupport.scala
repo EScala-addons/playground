@@ -7,8 +7,7 @@ import java.awt.{Rectangle,Point,Dimension}
 
 import figures.model.EllipseFigure
 
-trait EllipseSupport {
-  this: FigureFrame =>
+trait EllipseSupport extends FigureFrame {
 
   buttons.contents += new Button {
     text = "Add Ellipse"

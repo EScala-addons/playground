@@ -75,8 +75,8 @@ trait FigureEventsManager extends ComponentEvents with Canvas {
     handlesFor(f).foreach { h =>
       toClear += h
     }
-//    selectedFigure = null
-//    oldPoint = null
+    selectedFigure = null
+    oldPoint = null
   }
 
   case class Handle(cx: Int, cy: Int) extends Rectangle(cx - 5, cy - 5, 10, 10)

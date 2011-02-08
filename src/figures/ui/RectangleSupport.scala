@@ -7,8 +7,7 @@ import java.awt.{Rectangle,Point,Dimension}
 
 import figures.model.RectangleFigure
 
-trait RectangleSupport {
-  this: FigureFrame =>
+trait RectangleSupport extends FigureFrame {
 
   buttons.contents += new Button {
     text = "Add Rectangle"
