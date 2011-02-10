@@ -14,21 +14,37 @@ trait FigureEventsManager extends ComponentEvents with Canvas {
 
   val toClear = new ListBuffer[Rectangle]
 
+  /** Transforms an event carrying an optional value to an event
+      triggered whenever the value of the original event is Some */
   def some[T](ev: Event[Option[T]]): Event[T] =
     (ev && (d => d.isDefined)).map((o: Option[T]) => o.get)
+
+  /** Transforms an event carrying an optinal value to an event
+      triggered whenever the value of the original event is None */
   def none(ev: Event[Option[_]]): Event[Unit] =
     (ev && (d => !d.isDefined)).map((_: Option[_]) => ())
 
-  /** This event is triggered whenever a figure is selected with a left click */
-  evt figureSelected[Figure] = some(leftMouseClicked.map((p: Point) => drawing.figureAt(p)))
+  def dropSecond[T](ev: Event[(T, _)]): Event[T] =
+    ev.map((v: T, _: Any) => v)
+
+  /** This event is triggered whenever a figure is selected with a left or right click */
+  evt figureSelected[Figure] = some(leftMouseClicked.map((p: Point) => drawing.figureAt(p))) || dropSecond(rightSelected)
+
+  /** This event is triggered whenever a figure is selected with a right click */
   evt rightSelected[Figure,Point] = some(rightMouseClicked.map((p: Point) => drawing.figureAt(p))) and rightMouseClicked
 
-  evt figureUnselected[Figure] = (none(leftMouseClicked.map((p: Point) => drawing.figureAt(p)) && (_ => selectedFigure != null)) ||
-    (figureDragStarted && (p => selectedFigure != null && p._1 != selectedFigure))).map((_: Any) => selectedFigure)
+  /** This event is triggered whenever a previously selected figure is unselected */
+  evt figureUnselected[Figure] = 
+    (none(leftMousePressed.map((p: Point) => drawing.figureAt(p)) && (() => selectedFigure != null)) ||
+      (dropSecond(figureDragStarted) && (f => selectedFigure != null && f != selectedFigure))).map((_: Any) => selectedFigure)
 
+  /** This event is triggered whenever a figure is started to be dragged */
   evt figureDragStarted[Figure,Point] = some(leftMousePressed.map((p: Point) => drawing.figureAt(p))) and leftMousePressed
 
+  /** This event is triggered whenever a figure is dragged. It provides the new position */
   evt figureDragged[Point] = mouseDragged && (() => selectedFigure != null)
+
+  /** This event is triggered whenever the dragged figure is dropped */
   evt figureDropped[Figure] = (leftMouseReleased && (() => oldPoint != null)).map((_: Point) => selectedFigure)
 
   figureDragStarted += dragStart _
@@ -40,6 +56,7 @@ trait FigureEventsManager extends ComponentEvents with Canvas {
 
   private var selectedFigure: Figure = null
   private var oldPoint: Point = null
+
   /** When starting to drag a figure, save the start point */
   def dragStart(f: Figure, p: Point) {
     selectedFigure = f
@@ -47,7 +64,7 @@ trait FigureEventsManager extends ComponentEvents with Canvas {
   }
 
   def dragging(p: Point) {
-    toClear += selectedFigure.getBounds.clone.asInstanceOf[Rectangle]
+    toClear += new Rectangle(selectedFigure.getBounds)
     currentHandles.foreach { h =>
       toClear += h
     }
@@ -104,7 +121,6 @@ trait FigureEventsManager extends ComponentEvents with Canvas {
             case null => // do nothing
             case c => selectedFigure.setColor(c.getRGB)
           }
-          selectedFigure = null
         }
       }.peer
     )

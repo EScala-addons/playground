@@ -20,6 +20,7 @@ class FigureFrame extends MainFrame {
     preferredSize = new Dimension(1024, 768)
 
     def drawingInvalidated(rect: Rectangle) {
+      // only repaint the area containing the old and new positions
       repaint(toClear.foldLeft(rect)(_.union(_)))
     }
 
@@ -41,8 +42,6 @@ class FigureFrame extends MainFrame {
       }
       super.paint(g)
     }
-
-
   }
 
   lazy val buttons = new FlowPanel
