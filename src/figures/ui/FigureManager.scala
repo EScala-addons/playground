@@ -4,7 +4,6 @@ import figures.EventOperators
 import figures.model.{Figure,MutableDrawing}
 
 import scala.collection.mutable.ListBuffer
-import scala.events._
 import scala.swing.{Action,Menu,MenuItem}
 
 import java.awt.{Point,Rectangle,Color,Graphics2D}
