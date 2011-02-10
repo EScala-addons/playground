@@ -54,7 +54,7 @@ class FigureFrame extends MainFrame {
 
   contents = panel
   
-  maximized
+  maximize
 
 }
 

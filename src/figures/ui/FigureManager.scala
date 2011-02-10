@@ -1,5 +1,6 @@
 package figures.ui
 
+import figures.EventOperators
 import figures.model.{Figure,MutableDrawing}
 
 import scala.collection.mutable.ListBuffer
@@ -9,23 +10,10 @@ import scala.swing.{Action,Menu,MenuItem}
 import java.awt.{Point,Rectangle,Color,Graphics2D}
 import javax.swing.{JColorChooser,JPopupMenu}
 
-trait FigureEventsManager extends ComponentEvents with Canvas {
+trait FigureEventsManager extends ComponentEvents with Canvas with EventOperators {
   self =>
 
   val toClear = new ListBuffer[Rectangle]
-
-  /** Transforms an event carrying an optional value to an event
-      triggered whenever the value of the original event is Some */
-  def some[T](ev: Event[Option[T]]): Event[T] =
-    (ev && (d => d.isDefined)).map((o: Option[T]) => o.get)
-
-  /** Transforms an event carrying an optinal value to an event
-      triggered whenever the value of the original event is None */
-  def none(ev: Event[Option[_]]): Event[Unit] =
-    (ev && (d => !d.isDefined)).map((_: Option[_]) => ())
-
-  def dropSecond[T](ev: Event[(T, _)]): Event[T] =
-    ev.map((v: T, _: Any) => v)
 
   /** This event is triggered whenever a figure is selected with a left or right click */
   evt figureSelected[Figure] = some(leftMouseClicked.map((p: Point) => drawing.figureAt(p))) || dropSecond(rightSelected)
