@@ -1,7 +1,7 @@
 package figures.ui
 
 import scala.events._
-import scala.swing.{MainFrame,BorderPanel,FlowPanel,Panel}
+import scala.swing.{MainFrame,BorderPanel,FlowPanel,Panel,Component}
 import scala.swing.event.MouseClicked
 
 import java.awt.{Color,Rectangle,Point,Dimension,Graphics2D}
@@ -21,7 +21,9 @@ class FigureFrame extends MainFrame {
 
     def drawingInvalidated(rect: Rectangle) {
       // only repaint the area containing the old and new positions
-      repaint(toClear.foldLeft(rect)(_.union(_)))
+      val area = toClear.foldLeft(rect)(_.union(_))
+      toClear.clear()
+      repaint(area)
     }
 
     evt invalidated = drawing.invalidated || (figureSelected || figureUnselected || figureDropped).map((f: Figure) => f.getBounds)
@@ -29,14 +31,9 @@ class FigureFrame extends MainFrame {
     invalidated += drawingInvalidated _
 
     override def paint(g: Graphics2D) {
-      // first clear areas
-      for(r <- toClear) {
-        g.setColor(background)
-        g.fillRect(r.x, r.y, r.width, r.height)
-      }
-      toClear.clear()
-      
-      // draw all the figures
+      // draw the background
+      super.paintComponent(g)
+      // draw all the figures intersecting the current area
       drawing.figures.foreach { f =>
         f.render(g)
       }

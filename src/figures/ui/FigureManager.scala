@@ -20,25 +20,30 @@ trait FigureEventsManager extends ComponentEvents with Canvas with EventOperator
   /** This event is triggered whenever a figure is selected with a right click */
   evt rightSelected[Figure,Point] = some(rightMouseClicked.map((p: Point) => drawing.figureAt(p))) and rightMouseClicked
 
+  evt noneSelected[Unit] = none(leftMousePressed.map((p: Point) => drawing.figureAt(p)))
+
+  evt someSelected[Figure] = some(leftMousePressed.map((p: Point) => drawing.figureAt(p)))
+
   /** This event is triggered whenever a previously selected figure is unselected */
   evt figureUnselected[Figure] = 
-    (none(leftMousePressed.map((p: Point) => drawing.figureAt(p)) && (() => selectedFigure != null)) ||
-      (dropSecond(figureDragStarted) && (f => selectedFigure != null && f != selectedFigure))).map((_: Any) => selectedFigure)
+    (noneSelected && (() => selectedFigure != null) ||
+      (someSelected && (f => selectedFigure != null && f != selectedFigure))).map(() => selectedFigure)
 
   /** This event is triggered whenever a figure is started to be dragged */
-  evt figureDragStarted[Figure,Point] = some(leftMousePressed.map((p: Point) => drawing.figureAt(p))) and leftMousePressed
+  evt figureDragStarted[Figure,Point] = someSelected and leftMousePressed
 
   /** This event is triggered whenever a figure is dragged. It provides the new position */
   evt figureDragged[Point] = mouseDragged && (() => selectedFigure != null)
 
   /** This event is triggered whenever the dragged figure is dropped */
-  evt figureDropped[Figure] = (leftMouseReleased && (() => oldPoint != null)).map((_: Point) => selectedFigure)
+  evt figureDropped[Figure] = (leftMouseReleased && (() => oldPoint != null)).map(() => selectedFigure)
 
   figureDragStarted += dragStart _
   figureDragged += dragging _
   figureDropped += dropping _
   figureSelected += select _
   figureUnselected += unselect _
+  noneSelected += noneselect _
   rightSelected += openMenu _
 
   private var selectedFigure: Figure = null
@@ -52,33 +57,28 @@ trait FigureEventsManager extends ComponentEvents with Canvas with EventOperator
 
   def dragging(p: Point) {
     toClear += new Rectangle(selectedFigure.getBounds)
-    currentHandles.foreach { h =>
-      toClear += h
-    }
+    toClear ++= currentHandles
     val (dx, dy) = (p.x - oldPoint.x, p.y - oldPoint.y)
     selectedFigure.moveBy(dx, dy)
     oldPoint = p
   }
 
   def dropping(f: Figure) {
-    currentHandles.foreach { h =>
-      toClear += h
-    }
+    toClear ++= currentHandles
     selectedFigure = null
     oldPoint = null
   }
 
   def select(f: Figure) {
     selectedFigure = f
-    currentHandles.foreach { h =>
-      toClear += h
-    }
+    toClear ++= currentHandles
   }
 
   def unselect(f: Figure) {
-    handlesFor(f).foreach { h =>
-      toClear += h
-    }
+    toClear ++= handlesFor(f)
+  }
+
+  def noneselect() {
     selectedFigure = null
     oldPoint = null
   }
@@ -111,6 +111,16 @@ trait FigureEventsManager extends ComponentEvents with Canvas with EventOperator
         }
       }.peer
     )
+
+    add(
+      new Action("Delete") {
+        def apply() {
+          toClear ++= currentHandles
+          drawing -= selectedFigure
+          selectedFigure = null
+        }
+      }.peer
+    )
   }
 
   def openMenu(f: Figure, p: Point) {
@@ -125,12 +135,9 @@ trait FigureEventsManager extends ComponentEvents with Canvas with EventOperator
       currentHandles.foreach { h =>
         g.setColor(Color.LIGHT_GRAY)
         g.fill(h)
-//        g.setColor(Color.BLACK)
-//        g.draw(h)
       }
     }
   }
-
 }
 
 // vim: set ts=4 sw=4 et:

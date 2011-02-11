@@ -19,8 +19,11 @@ trait ComponentEvents extends Component {
   imperative evt leftMouseReleased[Point]
   imperative evt rightMouseReleased[Point]
   imperative evt mouseDragged[Point]
+  imperative evt deletePressed[Unit]
 
-  mouse.clicks.reactions += {
+  listenTo(mouse.clicks, mouse.moves)
+
+  reactions += {
     case MouseClicked(_, point, mods, _, _) => 
       mouseClicked(point)
       if(mods == 0)
@@ -39,9 +42,6 @@ trait ComponentEvents extends Component {
         leftMouseReleased(point)
       else if(mods == 256)
         rightMouseReleased(point)
-  }
-
-  mouse.moves.reactions += {
     case MouseMoved(_, point, _) => mouseMoved(point)
     case MouseDragged(_, point, _) => mouseDragged(point)
   }

@@ -5,7 +5,7 @@ import java.awt.{Point,Rectangle}
 class Connector(val start: Figure, 
                 val end: Figure, 
                 protected[this] val connFigure: PolylineFigure) {
-                    
+
   updateStart()
   updateEnd()
   
@@ -18,7 +18,9 @@ class Connector(val start: Figure,
   observable def updateEnd() =
     connFigure.changeEnd(center(end.getBounds))
 
-  private def center(rect: Rectangle) =
+  def getBounds() = connFigure.getBounds
+
+  protected def center(rect: Rectangle) =
     new Point(rect.x + rect.width / 2, rect.y + rect.height / 2)
 }
 
