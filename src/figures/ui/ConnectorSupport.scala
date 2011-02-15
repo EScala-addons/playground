@@ -35,22 +35,20 @@ trait ConnectorSupport extends FigureFrame {
         val to = f
         val line = new PolylineFigure(center(from.getBounds), center(to.getBounds))
         canvas.drawing += line
-        val conn = new Connector(from, to, line)
+        val conn = new Connector(from, to, line) {
+          evt endpointRemoved[Unit] = 
+            canvas.drawing.figures.elementRemoved && (f => f == from || f == to)
+          def removeConn() {
+            // remove the connector from the list
+            connectors -= this
+            // remove the line
+            canvas.drawing -= line
+            // unregister this reaction to free the event
+            endpointRemoved -= removeConn _
+          }
+        }
         connectors += conn
         canvas.figureSelected -= toConnect _
-        // listen for start or end figure being deleted
-        // local event accessing the local context
-        evt endpointRemoved[Unit] = 
-          canvas.drawing.figures.elementRemoved && (f => f == from || f == to)
-        def removeConnector() {
-          // remove the connector from the list
-          connectors -= conn
-          // remove the line
-          canvas.drawing -= line
-          // unregister this reaction to free the event
-          endpointRemoved -= removeConnector _
-        }
-        endpointRemoved += removeConnector _
 
         // reinitialization
         first = null
