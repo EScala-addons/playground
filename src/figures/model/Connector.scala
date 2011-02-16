@@ -15,6 +15,7 @@ abstract class Connector(val start: Figure,
   start.geomChanged += updateStart _
   end.geomChanged += updateEnd _
   endpointRemoved += removeConn _
+  endpointRemoved += cleanup _
       
   observable def updateStart() =
     connFigure.changeStart(center(start.getBounds)) 
@@ -25,6 +26,11 @@ abstract class Connector(val start: Figure,
   def getBounds() = connFigure.getBounds
 
   def removeConn()
+
+  private def cleanup() {
+    start.geomChanged -= updateStart _
+    end.geomChanged -= updateEnd _
+  }
 
   protected def center(rect: Rectangle) =
     new Point(rect.x + rect.width / 2, rect.y + rect.height / 2)

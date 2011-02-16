@@ -35,8 +35,8 @@ trait FigureEventsManager extends ComponentEvents with Canvas with EventOperator
   /** This event is triggered whenever a figure is dragged. It provides the new position */
   evt figureDragged[Point] = mouseDragged && (() => selectedFigure != null)
 
-  /** This event is triggered whenever the dragged figure is dropped */
-  evt figureDropped[Figure] = (leftMouseReleased && (() => oldPoint != null)).map(() => selectedFigure)
+  /** This event is triggered whenever the dragged figure is dropped (after having been dragged) */
+  evt figureDropped[Figure] = (leftMouseReleased && (() => oldPoint != null)).map(() => selectedFigure) after figureDragged 
 
   figureDragStarted += dragStart _
   figureDragged += dragging _

@@ -21,6 +21,10 @@ trait EventOperators {
   def dropSecond[T](ev: Event[(T, _)]): Event[T] =
     ev.map((v: T, _: Any) => v)
 
+  implicit def addAfterOp[T](ev: Event[T]) = new {
+    def after[S >: T](other: => Event[_]) = new EventNodeSequence[Any,S,S](other, ev, (_: Any, p: S) => p)
+  }
+
 }
 
 // vim: set ts=4 sw=4 et:
