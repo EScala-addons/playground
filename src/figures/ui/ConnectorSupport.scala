@@ -8,7 +8,22 @@ import java.awt.{Point,Rectangle}
 
 import figures.model.{Figure,Connector,PolylineFigure}
 
+/** 
+ * This trait adds support for connectors to the figure frame.
+ */
 trait ConnectorSupport extends FigureFrame {
+
+  val connectors = new VarList[Connector]
+
+  evt connectorChanged[Rectangle] = 
+    connectors.any(c => (beforeExec(c.updateStart)
+                      || beforeExec(c.updateEnd)).map(() => c.getBounds))
+
+  connectorChanged += clearOldLine _
+
+  def clearOldLine(r: Rectangle) {
+    canvas.toClear += new Rectangle(r)
+  }
 
   buttons.contents += new Button {
     text = "Add Connector"
@@ -19,14 +34,6 @@ trait ConnectorSupport extends FigureFrame {
 
     private var first: Figure = null
 
-    val connectors = new VarList[Connector]
-
-    evt connectorChanged[Rectangle] = 
-      connectors.any(c => (beforeExec(c.updateStart)
-                        || beforeExec(c.updateEnd)).map(() => c.getBounds))
-
-    connectorChanged += clearOldLine _
-
     def toConnect(f: Figure) {
       if(first == null) {
         first = f
@@ -35,22 +42,20 @@ trait ConnectorSupport extends FigureFrame {
         val to = f
         val line = new PolylineFigure(center(from.getBounds), center(to.getBounds))
         canvas.drawing += line
-        val conn = new Connector(from, to, line) {
+        val conn = new GuiConnector(from, to, line)/* {
 
           evt endpointRemoved[Unit] = 
             canvas.drawing.figures.elementRemoved && (f => f == start || f == end)
 
           def removeConn() {
             // remove the connector from the list
-            println("before: " + connectors.size)
             connectors -= this
-            println("after: " + connectors.size)
             // remove the line
             canvas.drawing -= line
             // unregister this reaction to free the event
             endpointRemoved -= removeConn _
           }
-        }
+        }*/
         connectors += conn
 
         // do not listen to selected figures anymore
@@ -61,13 +66,26 @@ trait ConnectorSupport extends FigureFrame {
       }
     }
 
-    def clearOldLine(r: Rectangle) {
-      canvas.toClear += new Rectangle(r)
-    }
-
     private def center(rect: Rectangle) =
       new Point(rect.x + rect.width / 2, rect.y + rect.height / 2)
   }
+
+  class GuiConnector(start: Figure, end: Figure, line: PolylineFigure) 
+        extends Connector(start, end, line) {
+
+    evt endpointRemoved[Unit] = 
+      canvas.drawing.figures.elementRemoved && (f => f == start || f == end)
+
+    def removeConn() {
+      // remove the connector from the list
+      connectors -= this
+      // remove the line
+      canvas.drawing -= line
+      // unregister this reaction to free the event
+      endpointRemoved -= removeConn _
+    }
+  }
+
 }
 
 // vim: set ts=4 sw=4 et:

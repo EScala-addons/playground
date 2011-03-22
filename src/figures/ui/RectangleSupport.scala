@@ -7,6 +7,9 @@ import java.awt.{Rectangle,Point,Dimension}
 
 import figures.model.RectangleFigure
 
+/**
+ * This trait adds support for rectangles to the figure frame.
+ */
 trait RectangleSupport extends FigureFrame {
 
   buttons.contents += new Button {

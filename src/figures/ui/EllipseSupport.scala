@@ -7,6 +7,9 @@ import java.awt.{Rectangle,Point,Dimension}
 
 import figures.model.EllipseFigure
 
+/**
+ * This trait adds support for ellipses to the figure frame
+ */
 trait EllipseSupport extends FigureFrame {
 
   buttons.contents += new Button {

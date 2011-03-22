@@ -6,6 +6,9 @@ import scala.swing.Component
 
 import java.awt.Point
 
+/**
+ * This trait transforms some of the standard Swing events on a component to EScala events.
+ */
 trait ComponentEvents extends Component {
 
   imperative evt mouseClicked[Point]

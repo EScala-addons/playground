@@ -20,8 +20,10 @@ trait FigureEventsManager extends ComponentEvents with Canvas with EventOperator
   /** This event is triggered whenever a figure is selected with a right click */
   evt rightSelected[Figure,Point] = some(rightMouseClicked.map((p: Point) => drawing.figureAt(p))) and rightMouseClicked
 
+  /** This event is triggered whenever a mouse click occurs outside any figure in the drawing */
   evt noneSelected[Unit] = none(leftMousePressed.map((p: Point) => drawing.figureAt(p)))
 
+  /** This event is triggered whenever a mouse click occurs on a figure in the drawing */
   evt someSelected[Figure] = some(leftMousePressed.map((p: Point) => drawing.figureAt(p)))
 
   /** This event is triggered whenever a previously selected figure is unselected */

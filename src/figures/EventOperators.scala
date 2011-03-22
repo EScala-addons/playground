@@ -3,7 +3,7 @@ package figures
 import scala.events._
 
 /**
- * This trait defines new operators on events
+ * This trait defines examples of new operators for events
  */
 trait EventOperators {
 
@@ -12,7 +12,7 @@ trait EventOperators {
   def some[T](ev: Event[Option[T]]): Event[T] =
     (ev && (d => d.isDefined)).map((o: Option[T]) => o.get)
 
-  /** Transforms an event carrying an optinal value to an event
+  /** Transforms an event carrying an optional value to an event
       triggered whenever the value of the original event is None */
   def none(ev: Event[Option[_]]): Event[Unit] =
     (ev && (d => !d.isDefined)).map((_: Option[_]) => ())
@@ -21,6 +21,9 @@ trait EventOperators {
   def dropSecond[T](ev: Event[(T, _)]): Event[T] =
     ev.map((v: T, _: Any) => v)
 
+  /** Adds the `after' operator to events:
+   *  `e1 after e2' is the same as `e2.then(e1, (_, p) => p)'
+   */
   implicit def addAfterOp[T](ev: Event[T]) = new {
     def after[S >: T](other: => Event[_]) = new EventNodeSequence[Any,S,S](other, ev, (_: Any, p: S) => p)
   }
