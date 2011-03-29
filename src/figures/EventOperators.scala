@@ -1,6 +1,7 @@
 package figures
 
-import scala.events._
+//import scala.events._
+import scala.react._
 
 /**
  * This trait defines new operators on events
@@ -9,20 +10,20 @@ trait EventOperators {
 
   /** Transforms an event carrying an optional value to an event
       triggered whenever the value of the original event is Some */
-  def some[T](ev: Event[Option[T]]): Event[T] =
-    (ev && (d => d.isDefined)).map((o: Option[T]) => o.get)
+  def some[T](ev: Events[Option[T]]): Events[T] =
+    (ev and (d => d.isDefined)).map((o: Option[T]) => o.get)
 
   /** Transforms an event carrying an optinal value to an event
       triggered whenever the value of the original event is None */
-  def none(ev: Event[Option[_]]): Event[Unit] =
-    (ev && (d => !d.isDefined)).map((_: Option[_]) => ())
+  def none(ev: Events[Option[_]]): Events[Unit] =
+    (ev and (d => !d.isDefined)).map((_: Option[_]) => ())
 
   /** Transforms an event taking two values by dropping the second value */
-  def dropSecond[T](ev: Event[(T, _)]): Event[T] =
+  def dropSecond[T](ev: Events[(T, _)]): Events[T] =
     ev.map((v: T, _: Any) => v)
 
-  implicit def addAfterOp[T](ev: Event[T]) = new {
-    def after[S >: T](other: => Event[_]) = new EventNodeSequence[Any,S,S](other, ev, (_: Any, p: S) => p)
+  implicit def addAfterOp[T](ev: Events[T]) = new {
+    def after[S >: T](other: => Events[_]) = new EventNodeSequence[Any,S,S](other, ev, (_: Any, p: S) => p)
   }
 
 }

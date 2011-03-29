@@ -1,6 +1,7 @@
 package figures.ui
 
-import scala.events._
+//import scala.events._
+import scala.react._
 import scala.swing.{MainFrame,BorderPanel,FlowPanel,Panel,Component}
 import scala.swing.event.MouseClicked
 
@@ -8,7 +9,7 @@ import java.awt.{Color,Rectangle,Point,Dimension,Graphics2D}
 
 import figures.model.{Figure,MutableDrawing}
 
-class FigureFrame extends MainFrame {
+class FigureFrame extends MainFrame with Observing {
 
   title = "EScala Figures"
 
@@ -26,9 +27,11 @@ class FigureFrame extends MainFrame {
       repaint(area)
     }
 
-    evt invalidated = drawing.invalidated || (figureSelected || figureUnselected || figureDropped).map((f: Figure) => f.getBounds)
+    //evt invalidated = drawing.invalidated || (figureSelected || figureUnselected || figureDropped).map((f: Figure) => f.getBounds)
+    val invalidated = drawing.invalidated merge (figureSelected merge figureUnselected merge figureDropped).map((f: Figure) => f.getBounds)
 
-    invalidated += drawingInvalidated _
+    //invalidated += drawingInvalidated _
+    val obInv = observe(invalidated) { x => drawingInvalidated _; true }
 
     override def paint(g: Graphics2D) {
       // draw the background

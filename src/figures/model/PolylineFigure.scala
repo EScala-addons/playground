@@ -4,6 +4,8 @@ import scala.collection.mutable.ListBuffer
 
 import java.awt.{Graphics,Color,Point,Rectangle}
 
+import scala.react._
+
 class PolylineFigure(from: Point, to : Point) extends Figure {
   protected[this] var points = new ListBuffer[Point]   
   points += from
@@ -11,11 +13,18 @@ class PolylineFigure(from: Point, to : Point) extends Figure {
 
   def this() = this(new Point(0,0), new Point(0,0))    
   
-  protected[this] evt pointsChanged[Unit] = 
-    afterExec(changePoint) || afterExec(insertPoint)
-    
-  override evt resized[Unit] = pointsChanged
-  override evt moved[Unit] = super.moved || pointsChanged
+  val afterExecChangePoint = new EventSource[Unit]
+  val afterExecInsertPoint = new EventSource[Unit]
+  protected[this] val pointsChanged = afterExecChangePoint merge afterExecInsertPoint
+  
+  //protected[this] evt pointsChanged[Unit] = 
+    //afterExec(changePoint) || afterExec(insertPoint)
+  
+  override val resized = pointsChanged
+  override val moved = afterExecMoveBy merge pointsChanged
+  
+  //override evt resized[Unit] = pointsChanged
+  //override evt moved[Unit] = super.moved || pointsChanged
   
   def getBounds = {
     var minX = points(0).x
@@ -34,7 +43,8 @@ class PolylineFigure(from: Point, to : Point) extends Figure {
   def moveBy(dx : Int, dy : Int) {
     for (pt <- points) {
       pt.translate(dx, dy)
-    }  
+    }
+    afterExecMoveBy emit ()  
   }
   
   def changeStart(pt : Point) {
@@ -47,10 +57,12 @@ class PolylineFigure(from: Point, to : Point) extends Figure {
   
   def changePoint(index : Int, pt : Point) { 
     points(index) = pt
+    afterExecChangePoint emit ()
   }
   
   def insertPoint(index : Int, pt : Point) { 
     points.insert(index, pt)
+    afterExecInsertPoint emit ()
   }
 
   def render(g: Graphics) {

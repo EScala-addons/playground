@@ -1,5 +1,7 @@
 package figures.ui
 
+import scala.react._
+
 import figures.EventOperators
 import figures.model.{Figure,MutableDrawing}
 
@@ -9,35 +11,38 @@ import scala.swing.{Action,Menu,MenuItem}
 import java.awt.{Point,Rectangle,Color,Graphics2D}
 import javax.swing.{JColorChooser,JPopupMenu}
 
-trait FigureEventsManager extends ComponentEvents with Canvas with EventOperators {
+trait FigureEventsManager extends ComponentEvents with Canvas with EventOperators with Observing{
   self =>
 
   val toClear = new ListBuffer[Rectangle]
 
   /** This event is triggered whenever a figure is selected with a left or right click */
-  evt figureSelected[Figure] = some(leftMouseClicked.map((p: Point) => drawing.figureAt(p))) || dropSecond(rightSelected)
+  val figureSelected : Events[Figure] = some(leftMouseClicked.map((p: Point) => drawing.figureAt(p))) merge dropSecond(rightSelected)
 
+  // !!!!!!!!!!!!!!!!!!2 type params not allowed in scala.react.Events:
   /** This event is triggered whenever a figure is selected with a right click */
-  evt rightSelected[Figure,Point] = some(rightMouseClicked.map((p: Point) => drawing.figureAt(p))) and rightMouseClicked
+  val rightSelected : Events[Figure,Point] = some(rightMouseClicked.map((p: Point) => drawing.figureAt(p))) and rightMouseClicked
 
-  evt noneSelected[Unit] = none(leftMousePressed.map((p: Point) => drawing.figureAt(p)))
+  val noneSelected : Events[Unit] = none(leftMousePressed.map((p: Point) => drawing.figureAt(p)))
 
-  evt someSelected[Figure] = some(leftMousePressed.map((p: Point) => drawing.figureAt(p)))
+  val someSelected : Events[Figure] = some(leftMousePressed.map((p: Point) => drawing.figureAt(p)))
 
   /** This event is triggered whenever a previously selected figure is unselected */
-  evt figureUnselected[Figure] = 
-    (noneSelected && (() => selectedFigure != null) ||
-      (someSelected && (f => selectedFigure != null && f != selectedFigure))).map(() => selectedFigure)
+  val figureUnselected : Events[Figure] = 
+    (noneSelected and (() => selectedFigure != null) merge
+      (someSelected and (f => selectedFigure != null and f != selectedFigure))).map(() => selectedFigure)
 
+	// !!!!!!!!!!!!!!!!!!2 type params not allowed in scala.react.Events:
   /** This event is triggered whenever a figure is started to be dragged */
-  evt figureDragStarted[Figure,Point] = someSelected and leftMousePressed
+  val figureDragStarted : Events[Figure,Point] = someSelected and leftMousePressed
 
   /** This event is triggered whenever a figure is dragged. It provides the new position */
-  evt figureDragged[Point] = mouseDragged && (() => selectedFigure != null)
+  val figureDragged : Events[Point] = mouseDragged and (() => selectedFigure != null)
 
   /** This event is triggered whenever the dragged figure is dropped (after having been dragged) */
-  evt figureDropped[Figure] = (leftMouseReleased && (() => oldPoint != null)).map(() => selectedFigure) after figureDragged 
+  val figureDropped : Events[Figure] = (leftMouseReleased and (() => oldPoint != null)).map(() => selectedFigure) after figureDragged 
 
+	/*
   figureDragStarted += dragStart _
   figureDragged += dragging _
   figureDropped += dropping _
@@ -45,6 +50,15 @@ trait FigureEventsManager extends ComponentEvents with Canvas with EventOperator
   figureUnselected += unselect _
   noneSelected += noneselect _
   rightSelected += openMenu _
+  */
+  val obDragStart = observe(figureDragStarted) { x => dragStart _; true }
+  val obDragged = observe(figureDragged) { x => dragging _; true }
+  val obDropped = observe(figureDropped) { x => dropping _; true }
+  val obFigSelected = observe(figureSelected) { x => select _; true }
+  val obFigUnselected = observe(figureUnselected) { x => unselect _; true }
+  val obNoneSelected = observe(noneSelected) { x => noneselect _; true }
+  val obRightSelected = observe(rightSelected) { x => openMenu _; true }
+  
 
   private var selectedFigure: Figure = null
   private var oldPoint: Point = null

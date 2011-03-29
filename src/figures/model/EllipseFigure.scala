@@ -3,26 +3,38 @@ package figures.model
 import java.awt.{Graphics,Color,Rectangle,Point}
 import java.awt.geom.Ellipse2D
 
+import scala.react._
+
 class EllipseFigure(var point: Point, var width: Int, var height: Int) extends Figure {
 
-  override evt resized[Unit] = afterExec(resize) || afterExec(setBounds)
-  override evt moved[Unit] = super.moved || afterExec(setBounds)
+  //override evt resized[Unit] = afterExec(resize) || afterExec(setBounds)
+  //override evt moved[Unit] = super.moved || afterExec(setBounds)
+  val afterExecResize = new EventSource[Unit]
+	val afterExecSetBounds = new EventSource[Unit]
+	
+	override val resized = afterExecResize merge afterExecSetBounds
+	override val moved = afterExecMoveBy merge afterExecSetBounds
+  
   
   def getBounds() : Rectangle = 
     new Rectangle(point.x, point.y, width, height)
   
-  def moveBy(dx : Int, dy : Int) =
+  def moveBy(dx : Int, dy : Int) = {
     point.translate(dx, dy)
+    afterExecMoveBy emit ()
+   }
 
   def resize(sx : Int, sy : Int) {
     width = sx
     height = sy
+    afterExecResize emit ()
   }
   
   def setBounds(bounds : Rectangle) {
     point = bounds.getLocation
     width = bounds.width
     height = bounds.height
+    afterExecSetBounds emit ()
   }
 
   def render(g: Graphics) {
