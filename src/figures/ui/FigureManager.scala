@@ -13,34 +13,44 @@ import javax.swing.{JColorChooser,JPopupMenu}
 
 trait FigureEventsManager extends ComponentEvents with Canvas with EventOperators with Observing{
   self =>
+  
+  private var selectedFigure: Figure = null
+  private var oldPoint: Point = null
 
   val toClear = new ListBuffer[Rectangle]
 
   /** This event is triggered whenever a figure is selected with a left or right click */
-  val figureSelected : Events[Figure] = some(leftMouseClicked.map((p: Point) => drawing.figureAt(p))) merge dropSecond(rightSelected)
-
-  // !!!!!!!!!!!!!!!!!!2 type params not allowed in scala.react.Events:
+  val figureSelected : Events[Figure] = some(leftMouseClicked.map((p: Point) => drawing.figureAt(p))) // merge dropSecond(rightSelected)
+  
   /** This event is triggered whenever a figure is selected with a right click */
-  val rightSelected : Events[Figure,Point] = some(rightMouseClicked.map((p: Point) => drawing.figureAt(p))) and rightMouseClicked
+  val rightSelected : Events[(Figure,Point)] = some(rightMouseClicked.map((p: Point) => 
+                                                        (drawing.figureAt(p)) match { 
+                                                            case None => None; 
+                                                            case Some(f) => Some (f, p) 
+                                                         }))
 
   val noneSelected : Events[Unit] = none(leftMousePressed.map((p: Point) => drawing.figureAt(p)))
 
-  val someSelected : Events[Figure] = some(leftMousePressed.map((p: Point) => drawing.figureAt(p)))
+  // some(leftMousePressed.map((p: Point) => drawing.figureAt(p)))
+  val someSelected : Events[(Figure, Point)] = some(leftMousePressed.map((p: Point) => 
+                                                        (drawing.figureAt(p)) match { 
+                                                            case None => None; 
+                                                            case Some(f) => Some (f, p) 
+                                                         }))
 
   /** This event is triggered whenever a previously selected figure is unselected */
   val figureUnselected : Events[Figure] = 
-    (noneSelected and (() => selectedFigure != null) merge
-      (someSelected and (f => selectedFigure != null and f != selectedFigure))).map(() => selectedFigure)
+    (noneSelected.filter (_ => self.selectedFigure != null) merge
+      someSelected.filter(f => (selectedFigure != null) && (f != selectedFigure))).map(_ => selectedFigure)
 
-	// !!!!!!!!!!!!!!!!!!2 type params not allowed in scala.react.Events:
   /** This event is triggered whenever a figure is started to be dragged */
-  val figureDragStarted : Events[Figure,Point] = someSelected and leftMousePressed
+  val figureDragStarted : Events[(Figure,Point)] = someSelected // and leftMousePressed -> weg weil someSelected den Punkt aus leftMousePressed enthaelt
 
   /** This event is triggered whenever a figure is dragged. It provides the new position */
-  val figureDragged : Events[Point] = mouseDragged and (() => selectedFigure != null)
+  val figureDragged : Events[Point] = mouseDragged.filter(_ => selectedFigure != null)
 
   /** This event is triggered whenever the dragged figure is dropped (after having been dragged) */
-  val figureDropped : Events[Figure] = (leftMouseReleased and (() => oldPoint != null)).map(() => selectedFigure) after figureDragged 
+  val figureDropped : Events[Figure] = (leftMouseReleased.filter(_ => oldPoint != null)).map(_ => selectedFigure) after figureDragged 
 
 	/*
   figureDragStarted += dragStart _
@@ -51,19 +61,18 @@ trait FigureEventsManager extends ComponentEvents with Canvas with EventOperator
   noneSelected += noneselect _
   rightSelected += openMenu _
   */
-  val obDragStart = observe(figureDragStarted) { x => dragStart _; true }
-  val obDragged = observe(figureDragged) { x => dragging _; true }
-  val obDropped = observe(figureDropped) { x => dropping _; true }
-  val obFigSelected = observe(figureSelected) { x => select _; true }
-  val obFigUnselected = observe(figureUnselected) { x => unselect _; true }
-  val obNoneSelected = observe(noneSelected) { x => noneselect _; true }
-  val obRightSelected = observe(rightSelected) { x => openMenu _; true }
+  
+  
+  observe(figureDragStarted) { (fp: (Figure, Point)) => dragStart(fp._1, fp._2); true }
+  observe(figureDragged) { p: Point => dragging(p); true }
+  observe(figureDropped) { f: Figure => dropping(f); true }
+  observe(figureSelected) { f: Figure => select(f); true }
+  observe(figureUnselected) { f: Figure => unselect(f); true }
+  observe(noneSelected) { x => noneselect _; true }
+  observe(rightSelected) { (fp: (Figure, Point)) => openMenu(fp._1, fp._2); true }
   
 
-  private var selectedFigure: Figure = null
-  private var oldPoint: Point = null
-
-  /** When starting to drag a figure, save the start point */
+   /** When starting to drag a figure, save the start point */
   def dragStart(f: Figure, p: Point) {
     selectedFigure = f
     oldPoint = p

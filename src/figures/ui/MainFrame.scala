@@ -24,20 +24,22 @@ class FigureFrame extends MainFrame with Observing {
       // only repaint the area containing the old and new positions
       val area = toClear.foldLeft(rect)(_.union(_))
       toClear.clear()
+      println("repainting...")
       repaint(area)
+      println("repainted...")
     }
 
     //evt invalidated = drawing.invalidated || (figureSelected || figureUnselected || figureDropped).map((f: Figure) => f.getBounds)
     val invalidated = drawing.invalidated merge (figureSelected merge figureUnselected merge figureDropped).map((f: Figure) => f.getBounds)
 
     //invalidated += drawingInvalidated _
-    val obInv = observe(invalidated) { x => drawingInvalidated _; true }
+    observe(invalidated) { x : Rectangle => println("drawingInvalidated");drawingInvalidated(x); true }
 
     override def paint(g: Graphics2D) {
       // draw the background
       super.paintComponent(g)
       // draw all the figures intersecting the current area
-      drawing.figures.foreach { f =>
+      drawing.figures().foreach { f =>
         f.render(g)
       }
       super.paint(g)
